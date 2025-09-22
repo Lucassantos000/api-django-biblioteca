@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'core',
+    'api'
 ]
 
 MIDDLEWARE = [
@@ -78,31 +81,19 @@ WSGI_APPLICATION = 'django_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DATABASE_NAME'),  # Usando get() para acessar a variável de ambiente
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT'),
+        'NAME': os.environ.get('DATABASE_NAME', ''),
+        'USER': os.environ.get('DATABASE_USER', ''),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+        'HOST': os.environ.get('DATABASE_HOST', 'db'),
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
 
 # Caches
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': f"redis://{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}/1",  # Correção aqui
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
-
-
 # Configuração do cache
-REDIS_HOST = os.environ["REDIS_HOST"] 
-REDIS_PORT = os.environ["REDIS_PORT"]
-REDIS_PASSWORD = os.environ["REDIS_PASSWORD"] 
+REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "")
 
 REDIS_LOCATION = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 REDIS_LOCATION_SESSION = f"redis://{REDIS_HOST}:{REDIS_PORT}/2"
@@ -176,3 +167,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
