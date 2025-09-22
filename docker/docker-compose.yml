@@ -1,0 +1,111 @@
+services:
+  api-django-biblioteca:
+    restart: always
+    stdin_open: true
+    tty: true
+    # user: "0:0"
+    env_file:
+      - ../.env
+    image: "${API_IMAGE}"
+    hostname: api-django-biblioteca
+    container_name: api-django-biblioteca
+    build:
+      context: ../
+      dockerfile: dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    ulimits:
+      memlock: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - type: bind
+        source: ../
+        target: /app
+    # healthcheck:
+    #   test: curl --fail -s http://web:8000/accounts/login/
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    environment:
+      TZ: ${TZ:-America/Manaus}
+    networks:
+      - biblioteca
+    # extra_hosts:
+      # - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+
+  redis:
+    restart: always
+    env_file:
+      - ../.env
+    networks:
+      - biblioteca
+    image: redis:latest
+    environment:
+      TZ: ${TZ:-America/Manaus}
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  db:
+    restart: always
+    env_file:
+      - ../.env
+    networks:
+      - biblioteca
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      TZ: ${TZ:-America/Manaus}
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+      POSTGRES_DB: ${DATABASE_NAME:-api}
+      # PGDATA: 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - ../deploy/pgdata:/data/postgres
+      - ../deploy/tmp_pgdata:/tmp
+    shm_size: ${MEMORY_SHM_SIZE:-512mb}
+
+  pgadmin:
+    env_file:
+      - ../.env
+    restart: always
+    image: ${PGADMIN_IMAGE}
+    container_name: pgadmin4
+    hostname: pgadmin4
+    ports:
+      - "${PGADMIN_PORT}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      TZ: ${TZ}
+    networks:
+      - biblioteca
+    depends_on:
+      - db
+    logging:
+      driver: json-file
+      options:
+        max-size: ${MAX_SIZE_LOG:-5m}
+        max-file: ${MAX_FILE_LOG:-6}
+
+networks:
+  biblioteca:  # Definição da rede fora do escopo dos serviços
+    driver: bridge
