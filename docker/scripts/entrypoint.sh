@@ -1,15 +1,18 @@
 #!/bin/bash
 
-# Espera o container do banco de dados Postgres ficar disponível
-# Espera o container do banco de dados Postgres ficar disponível
-until pg_isready -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$DATABASE_USER"; do
-    echo "Aguardando o banco de dados Postgres iniciar..."
-    sleep 0.4s
-done
-echo "Banco de dados está pronto"
+# Carregar as funções do arquivo utils.sh
+source /app/docker/scripts/utils.sh
 
-echo "Executando as migrações"
-python manage.py migrate
+# Esperar o PostgreSQL estar pronto
+check_postgres
 
-echo "Subindo o servidor"
-python manage.py runserver 0.0.0.0:8000
+# Aplicar migracoes
+aplicar_migracoes
+
+# Verificar se o ambiente é produção e iniciar o servidor correspondente
+if eh_ambiente_producao; then
+    start_gunicorn  # Iniciar Gunicorn se for produção
+else
+    start_django_runserver  # Caso contrário, iniciar o servidor de desenvolvimento
+fi
+

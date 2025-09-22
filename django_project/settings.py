@@ -100,21 +100,28 @@ CACHES = {
 
 
 # Configuração do cache
+REDIS_HOST = os.environ["REDIS_HOST"] 
+REDIS_PORT = os.environ["REDIS_PORT"]
+REDIS_PASSWORD = os.environ["REDIS_PASSWORD"] 
+
+REDIS_LOCATION = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+REDIS_LOCATION_SESSION = f"redis://{REDIS_HOST}:{REDIS_PORT}/2"
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('REDIS_LOCATION', 'redis://127.0.0.1:6379/1'),  # Usando .get() com fallback
+        'LOCATION': REDIS_LOCATION,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PASSWORD': os.environ.get('REDIS_PASSWORD', ''),  # Caso tenha senha para a conexão com Redis
+            'PASSWORD': REDIS_PASSWORD
         }
     },
     'session': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('SESSION_LOCATION', 'redis://127.0.0.1:6379/2'),  # Usando .get() com fallback
+        'LOCATION': REDIS_LOCATION_SESSION,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PASSWORD': os.environ.get('SESSION_PASSWORD', ''),  # Senha para a sessão Redis
+            'PASSWORD': REDIS_PASSWORD
         }
     }
 }

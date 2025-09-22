@@ -3,7 +3,7 @@ services:
     restart: always
     stdin_open: true
     tty: true
-    # user: "0:0"
+    user: "0:0"
     env_file:
       - ../.env
     image: "${API_IMAGE}"
@@ -12,7 +12,7 @@ services:
     build:
       context: ../
       dockerfile: dockerfile
-    command: python manage.py runserver 0.0.0.0:8000
+    command: /app/docker/scripts/entrypoint.sh
     ports:
       - "8000:8000"
     ulimits:
